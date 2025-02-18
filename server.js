@@ -8,13 +8,12 @@ require('dotenv').config();
 
 const app = express();
 const corsOptions = {
-  origin: 'https://crud-one-beryl.vercel.app/', 
+  origin: '*', // Allow all origins (use specific domain for production)
   allowedHeaders: ['Authorization', 'Content-Type'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
 
 app.use(cors(corsOptions));
-
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
@@ -76,25 +75,24 @@ app.post('/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ message: 'Invalid password' });
 
-        const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ message: 'Login successful', token });
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+        res.json({ token });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Get All Users (Protected Route)
+// Get Users (Authenticated)
 app.get('/users', verifyToken, async (req, res) => {
     try {
-        const users = await User.find({}, '-password');
+        const users = await User.find().select('name email');
         res.json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Start Server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+// Start server
+app.listen(PORT, () => {
+    console.log(`✅ Server is running on port ${PORT}`);
 });
-
