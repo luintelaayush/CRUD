@@ -4,19 +4,19 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config(); // Load environment variables
+require('dotenv').config();
 
 const app = express();
 app.use(cors({
-    origin: 'http://localhost:3000', // Your frontend domain
+    origin: '*', 
     allowedHeaders: ['Authorization', 'Content-Type'],
-    credentials: true // Allow credentials like cookies
+    credentials: true 
 }));
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key'; // Default JWT Secret Key
+const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
 // MongoDB Connection
 mongoose.connect(MONGO_URI, { 
