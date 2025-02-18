@@ -7,11 +7,14 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
-app.use(cors({
-    origin: '*', 
-    allowedHeaders: ['Authorization', 'Content-Type'],
-    credentials: true 
-}));
+const corsOptions = {
+  origin: '*', 
+  allowedHeaders: ['Authorization', 'Content-Type'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+};
+
+app.use(cors(corsOptions));
+
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
