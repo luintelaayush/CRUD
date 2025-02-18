@@ -92,6 +92,11 @@
             checkLogin();
         });
 
+        // Set API URL based on environment
+        const API_URL = process.env.NODE_ENV === 'production'
+            ? 'https://crud-one-beryl.vercel.app/'
+            : 'http://localhost:3000/';
+
         // Login Form Submit
         $('#loginForm').submit(function(e) {
             e.preventDefault();
@@ -100,7 +105,7 @@
                 password: $('#loginPassword').val()
             };
 
-            axios.post('*', user)
+            axios.post(`${API_URL}login`, user)
                 .then(response => {
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('email', user.email);
@@ -118,7 +123,7 @@
                 password: $('#signupPassword').val()
             };
 
-            axios.post('*/register', user)
+            axios.post(`${API_URL}register`, user)
                 .then(response => {
                     alert('Registration successful!');
                     $('#signupSection').hide();
@@ -140,22 +145,20 @@
         });
 
         // Check if user is logged in
-      function checkLogin() {
-    const token = localStorage.getItem('token');
-    console.log('Token from localStorage:', token); // Debugging log
-    if (token) {
-        $('#loginSection').hide();
-        $('#signupSection').hide();
-        $('#dashboardSection').show();
-        $('#userEmail').text(localStorage.getItem('email'));
-        fetchUsers();
-    } else {
-        $('#loginSection').show();
-        $('#signupSection').hide();
-        $('#dashboardSection').hide();
-    }
-}
-
+        function checkLogin() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                $('#loginSection').hide();
+                $('#signupSection').hide();
+                $('#dashboardSection').show();
+                $('#userEmail').text(localStorage.getItem('email'));
+                fetchUsers();
+            } else {
+                $('#loginSection').show();
+                $('#signupSection').hide();
+                $('#dashboardSection').hide();
+            }
+        }
 
         // Logout
         $('#logoutBtn').click(() => {
@@ -165,46 +168,37 @@
         });
 
         // Fetch Users
-        // Fetch Users (with Authorization Header)
-function fetchUsers() {
-    const token = localStorage.getItem('token');
-    console.log('Sending token:', token); // Debugging log
-    if (!token) {
-        console.log('No token found'); // Debugging log
-        return;
-    }
-    
-    axios.get('https://crud-one-beryl.vercel.app/users', {
-        headers: {
-            Authorization: `Bearer ${token}`
+        function fetchUsers() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            axios.get(`${API_URL}users`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                $('#usersTable').empty();
+                response.data.forEach(user => {
+                    $('#usersTable').append(`
+                        <tr data-name="${user.name}" data-email="${user.email}">
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                        </tr>
+                    `);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+                alert('Error occurred while fetching data: ' + error.response.data.message);
+            });
         }
-    })
-    .then(response => {
-        console.log('Fetched users:', response.data); // Debugging log
-        $('#usersTable').empty();
-        response.data.forEach(user => {
-            $('#usersTable').append(`
-                <tr data-name="${user.name}" data-email="${user.email}">
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                </tr>
-            `);
-        });
-    })
-    .catch(error => {
-        console.error('Error fetching users:', error);
-        alert('Error occurred while fetching data: ' + error.response.data.message);
-    });
-}
 
         // Trigger modal when a row in the table is clicked
         $('#usersTable').on('click', 'tr', function() {
             const userName = $(this).data('name');
             const userEmail = $(this).data('email');
-
             $('#modalUserName').text(userName);
             $('#modalUserEmail').text(userEmail);
-
             $('#userModal').modal('show');
         });
     </script>
