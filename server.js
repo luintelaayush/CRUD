@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key'; // Default JWT secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key'; // Default JWT Secret Key
 
 // MongoDB Connection
 mongoose.connect(MONGO_URI, { 
@@ -27,14 +27,14 @@ mongoose.connect(MONGO_URI, {
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
-  password: String
+  password: String,
 });
 
 const User = mongoose.model('User', userSchema);
 
 // Middleware to verify JWT
 const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  const token = req.headers.authorization;
   if (!token) return res.status(401).json({ message: 'Access denied. No token provided.' });
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
@@ -44,14 +44,15 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-// ✅ User Registration
+// User Registration
 app.post('/register', async (req, res) => {
   try {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const { name, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
-      name: req.body.name,
-      email: req.body.email,
-      password: hashedPassword
+      name,
+      email,
+      password: hashedPassword,
     });
     await user.save();
     res.status(201).json({ message: 'User created successfully' });
@@ -60,13 +61,14 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// ✅ User Login (Returns JWT)
+// User Login
 app.post('/login', async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'User not found' });
 
-    const validPassword = await bcrypt.compare(req.body.password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(400).json({ message: 'Invalid password' });
 
     const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
@@ -76,7 +78,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// ✅ Get Users (Protected Route)
+// Get All Users (Protected Route)
 app.get('/users', verifyToken, async (req, res) => {
   try {
     const users = await User.find({}, '-password');
