@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table-hover tbody tr:hover { cursor: pointer; }
+        .modal-content { padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <!-- Login Form -->
+        <div class="card mb-4" id="loginSection">
+            <div class="card-body">
+                <h2>User Login</h2>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <input type="email" class="form-control" id="loginEmail" placeholder="Email" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="password" class="form-control" id="loginPassword" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+                <button class="btn btn-link" id="signupBtn">Don't have an account? Sign up</button>
+            </div>
+        </div>
+
+        <!-- Signup Form -->
+        <div class="card mb-4" id="signupSection" style="display: none;">
+            <div class="card-body">
+                <h2>User Signup</h2>
+                <form id="signupForm">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="signupName" placeholder="Full Name" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="email" class="form-control" id="signupEmail" placeholder="Email" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="password" class="form-control" id="signupPassword" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign Up</button>
+                    <button class="btn btn-link" id="backToLoginBtn">Already have an account? Login</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- User Dashboard (Hidden Initially) -->
+        <div id="dashboardSection" style="display: none;">
+            <h2>Welcome, <span id="userEmail"></span>!</h2>
+            <button id="logoutBtn" class="btn btn-danger">Logout</button>
+
+            <!-- User Table -->
+            <h2 class="mt-4">Registered Users</h2>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>Name: <span id="modalUserName"></span></h4>
+                    <h4>Email: <span id="modalUserEmail"></span></h4>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        $(document).ready(() => {
+            checkLogin();
+
+            // Login Form Submit
+            $('#loginForm').submit(function(e) {
+                e.preventDefault();
+                const user = {
+                    email: $('#loginEmail').val(),
+                    password: $('#loginPassword').val()
+                };
+
+                axios.post('http://localhost:3000/login', user)
+                    .then(response => {
+                        localStorage.setItem('token', response.data.token);
+                        localStorage.setItem('email', user.email);
+                        checkLogin();
+                    })
+                    .catch(error => alert(error.response.data));
+            });
+
+            // Signup Form Submit
+            $('#signupForm').submit(function(e) {
+                e.preventDefault();
+                const user = {
+                    name: $('#signupName').val(),
+                    email: $('#signupEmail').val(),
+                    password: $('#signupPassword').val()
+                };
+
+                axios.post('http://localhost:3000/register', user)
+                    .then(response => {
+                        alert('Registration successful!');
+                        $('#signupSection').hide();
+                        $('#loginSection').show();
+                    })
+                    .catch(error => alert(error.response.data));
+            });
+
+            // Logout
+            $('#logoutBtn').click(function() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('email');
+                checkLogin();
+            });
+
+            // Check login state and fetch user data
+            function checkLogin() {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    $('#loginSection').hide();
+                    $('#signupSection').hide();
+                    $('#dashboardSection').show();
+
+                    // Fetch users data
+                    axios.get('http://localhost:3000/users', { 
+                        headers: { 'Authorization': token } 
+                    })
+                    .then(response => {
+                        let usersHTML = '';
+                        response.data.forEach(user => {
+                            usersHTML += `<tr>
+                                            <td>${user.name}</td>
+                                            <td>${user.email}</td>
+                                           </tr>`;
+                        });
+                        $('#usersTable').html(usersHTML);
+                    })
+                    .catch(error => console.error(error));
+                } else {
+                    $('#loginSection').show();
+                    $('#signupSection').hide();
+                    $('#dashboardSection').hide();
+                }
+            }
+
+            // Trigger modal when a row in the table is clicked
+            $('#usersTable').on('click', 'tr', function() {
+                const userName = $(this).find('td:nth-child(1)').text();
+                const userEmail = $(this).find('td:nth-child(2)').text();
+                
+                $('#modalUserName').text(userName);
+                $('#modalUserEmail').text(userEmail);
+
+                $('#userModal').modal('show');
+            });
+        });
+    </script>
+</body>
+</html>
