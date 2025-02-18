@@ -39,6 +39,7 @@ const User = mongoose.model('User', userSchema);
 // Middleware to verify JWT
 const verifyToken = (req, res, next) => {
     const token = req.headers.authorization;
+    console.log('Received token:', token); // Debugging log
     if (!token) return res.status(401).json({ message: 'Access denied. No token provided.' });
 
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
@@ -47,6 +48,7 @@ const verifyToken = (req, res, next) => {
         next();
     });
 };
+
 
 // User Registration
 app.post('/register', async (req, res) => {
@@ -82,15 +84,17 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Get Users (Authenticated)
 app.get('/users', verifyToken, async (req, res) => {
     try {
+        console.log('User info from token:', req.user); // Debugging log
         const users = await User.find().select('name email');
         res.json(users);
     } catch (error) {
+        console.error('Error fetching users:', error);
         res.status(500).json({ error: error.message });
     }
 });
+
 
 // Start server
 app.listen(PORT, () => {
