@@ -68,7 +68,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal for User Details -->
     <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -106,7 +106,7 @@
                     localStorage.setItem('email', user.email);
                     checkLogin();
                 })
-                .catch(error => alert(error.response.data));
+                .catch(error => alert(error.response.data.message));
         });
 
         // Signup Form Submit
@@ -124,7 +124,7 @@
                     $('#signupSection').hide();
                     $('#loginSection').show();
                 })
-                .catch(error => alert(error.response.data));
+                .catch(error => alert(error.response.data.message));
         });
 
         // Switch to signup section
@@ -167,27 +167,27 @@
             const token = localStorage.getItem('token');
             axios.get('http://localhost:3000/users', {
                 headers: {
-                    Authorization: `Bearer ${token}` // Ensure the token is prefixed with 'Bearer'
+                    Authorization: `Bearer ${token}`
                 }
             })
-                .then(response => {
-                    $('#usersTable').empty();
-                    response.data.forEach(user => {
-                        $('#usersTable').append(`
-                            <tr>
-                                <td>${user.name}</td>
-                                <td>${user.email}</td>
-                            </tr>
-                        `);
-                    });
-                })
-                .catch(error => alert('Error occurred while fetching data: ' + error.response.data.message));
+            .then(response => {
+                $('#usersTable').empty();
+                response.data.forEach(user => {
+                    $('#usersTable').append(`
+                        <tr data-name="${user.name}" data-email="${user.email}">
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                        </tr>
+                    `);
+                });
+            })
+            .catch(error => alert('Error occurred while fetching data: ' + error.response.data.message));
         }
 
         // Trigger modal when a row in the table is clicked
         $('#usersTable').on('click', 'tr', function() {
-            const userName = $(this).find('td:nth-child(1)').text();
-            const userEmail = $(this).find('td:nth-child(2)').text();
+            const userName = $(this).data('name');
+            const userEmail = $(this).data('email');
 
             $('#modalUserName').text(userName);
             $('#modalUserEmail').text(userEmail);
