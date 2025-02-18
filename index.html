@@ -77,11 +77,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <h4>Name: <span id="modalUserName"></span></h4>
-                    <h4>Email: <span id="modalUserEmail"></span></h4>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <p><strong>Name:</strong> <span id="modalUserName"></span></p>
+                    <p><strong>Email:</strong> <span id="modalUserEmail"></span></p>
                 </div>
             </div>
         </div>
@@ -93,89 +90,109 @@
     <script>
         $(document).ready(() => {
             checkLogin();
+        });
 
-            // Login Form Submit
-            $('#loginForm').submit(function(e) {
-                e.preventDefault();
-                const user = {
-                    email: $('#loginEmail').val(),
-                    password: $('#loginPassword').val()
-                };
+        // Login Form Submit
+        $('#loginForm').submit(function(e) {
+            e.preventDefault();
+            const user = {
+                email: $('#loginEmail').val(),
+                password: $('#loginPassword').val()
+            };
 
-                axios.post('http://localhost:3000/login', user)
-                    .then(response => {
-                        localStorage.setItem('token', response.data.token);
-                        localStorage.setItem('email', user.email);
-                        checkLogin();
-                    })
-                    .catch(error => alert(error.response.data));
-            });
+            axios.post('http://localhost:3000/login', user)
+                .then(response => {
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('email', user.email);
+                    checkLogin();
+                })
+                .catch(error => alert(error.response.data));
+        });
 
-            // Signup Form Submit
-            $('#signupForm').submit(function(e) {
-                e.preventDefault();
-                const user = {
-                    name: $('#signupName').val(),
-                    email: $('#signupEmail').val(),
-                    password: $('#signupPassword').val()
-                };
+        // Signup Form Submit
+        $('#signupForm').submit(function(e) {
+            e.preventDefault();
+            const user = {
+                name: $('#signupName').val(),
+                email: $('#signupEmail').val(),
+                password: $('#signupPassword').val()
+            };
 
-                axios.post('http://localhost:3000/register', user)
-                    .then(response => {
-                        alert('Registration successful!');
-                        $('#signupSection').hide();
-                        $('#loginSection').show();
-                    })
-                    .catch(error => alert(error.response.data));
-            });
-
-            // Logout
-            $('#logoutBtn').click(function() {
-                localStorage.removeItem('token');
-                localStorage.removeItem('email');
-                checkLogin();
-            });
-
-            // Check login state and fetch user data
-            function checkLogin() {
-                const token = localStorage.getItem('token');
-                if (token) {
-                    $('#loginSection').hide();
+            axios.post('http://localhost:3000/register', user)
+                .then(response => {
+                    alert('Registration successful!');
                     $('#signupSection').hide();
-                    $('#dashboardSection').show();
-
-                    // Fetch users data
-                    axios.get('http://localhost:3000/users', { 
-                        headers: { 'Authorization': token } 
-                    })
-                    .then(response => {
-                        let usersHTML = '';
-                        response.data.forEach(user => {
-                            usersHTML += `<tr>
-                                            <td>${user.name}</td>
-                                            <td>${user.email}</td>
-                                           </tr>`;
-                        });
-                        $('#usersTable').html(usersHTML);
-                    })
-                    .catch(error => console.error(error));
-                } else {
                     $('#loginSection').show();
-                    $('#signupSection').hide();
-                    $('#dashboardSection').hide();
-                }
+                })
+                .catch(error => alert(error.response.data));
+        });
+
+        // Switch to signup section
+        $('#signupBtn').click(() => {
+            $('#loginSection').hide();
+            $('#signupSection').show();
+        });
+
+        // Back to login section
+        $('#backToLoginBtn').click(() => {
+            $('#signupSection').hide();
+            $('#loginSection').show();
+        });
+
+        // Check if user is logged in
+        function checkLogin() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                $('#loginSection').hide();
+                $('#signupSection').hide();
+                $('#dashboardSection').show();
+                $('#userEmail').text(localStorage.getItem('email'));
+                fetchUsers();
+            } else {
+                $('#loginSection').show();
+                $('#signupSection').hide();
+                $('#dashboardSection').hide();
             }
+        }
 
-            // Trigger modal when a row in the table is clicked
-            $('#usersTable').on('click', 'tr', function() {
-                const userName = $(this).find('td:nth-child(1)').text();
-                const userEmail = $(this).find('td:nth-child(2)').text();
-                
-                $('#modalUserName').text(userName);
-                $('#modalUserEmail').text(userEmail);
+        // Logout
+        $('#logoutBtn').click(() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            checkLogin();
+        });
 
-                $('#userModal').modal('show');
-            });
+        // Fetch Users
+        function fetchUsers() {
+            const token = localStorage.getItem('token');
+            axios.get('http://localhost:3000/users', {
+                headers: {
+                    Authorization: `Bearer ${token}` // Ensure the token is prefixed with 'Bearer'
+                }
+            })
+                .then(response => {
+                    $('#usersTable').empty();
+                    response.data.forEach(user => {
+                        $('#usersTable').append(`
+                            <tr>
+                                <td>${user.name}</td>
+                                <td>${user.email}</td>
+                            </tr>
+                        `);
+                    });
+                })
+                .catch(error => alert('Error occurred while fetching data: ' + error.response.data.message));
+        }
+
+        // Trigger modal when a row in the table is clicked
+        $('#usersTable').on('click', 'tr', function() {
+            const userName = $(this).find('td:nth-child(1)').text();
+            const userEmail = $(this).find('td:nth-child(2)').text();
+
+            $('#modalUserName').text(userName);
+            $('#modalUserEmail').text(userEmail);
+
+            $('#userModal').modal('show');
         });
     </script>
 </body>
