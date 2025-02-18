@@ -8,7 +8,7 @@ require('dotenv').config();
 
 const app = express();
 const corsOptions = {
-  origin: '*', 
+  origin: 'https://crud-one-beryl.vercel.app/', 
   allowedHeaders: ['Authorization', 'Content-Type'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
