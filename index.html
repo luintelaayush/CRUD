@@ -100,7 +100,7 @@
                 password: $('#loginPassword').val()
             };
 
-            axios.post('http://localhost:3000/login', user)
+            axios.post('https://crud-one-beryl.vercel.app//login', user)
                 .then(response => {
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('email', user.email);
@@ -118,7 +118,7 @@
                 password: $('#signupPassword').val()
             };
 
-            axios.post('http://localhost:3000/register', user)
+            axios.post('https://crud-one-beryl.vercel.app//register', user)
                 .then(response => {
                     alert('Registration successful!');
                     $('#signupSection').hide();
@@ -165,7 +165,7 @@
         // Fetch Users
         function fetchUsers() {
             const token = localStorage.getItem('token');
-            axios.get('http://localhost:3000/users', {
+            axios.get('https://crud-one-beryl.vercel.app//users', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
