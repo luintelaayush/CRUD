@@ -100,7 +100,7 @@
                 password: $('#loginPassword').val()
             };
 
-            axios.post('https://crud-one-beryl.vercel.app/login', user)
+            axios.post('*', user)
                 .then(response => {
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('email', user.email);
@@ -118,7 +118,7 @@
                 password: $('#signupPassword').val()
             };
 
-            axios.post('https://crud-one-beryl.vercel.app/register', user)
+            axios.post('*/register', user)
                 .then(response => {
                     alert('Registration successful!');
                     $('#signupSection').hide();
@@ -140,20 +140,22 @@
         });
 
         // Check if user is logged in
-        function checkLogin() {
-            const token = localStorage.getItem('token');
-            if (token) {
-                $('#loginSection').hide();
-                $('#signupSection').hide();
-                $('#dashboardSection').show();
-                $('#userEmail').text(localStorage.getItem('email'));
-                fetchUsers();
-            } else {
-                $('#loginSection').show();
-                $('#signupSection').hide();
-                $('#dashboardSection').hide();
-            }
-        }
+      function checkLogin() {
+    const token = localStorage.getItem('token');
+    console.log('Token from localStorage:', token); // Debugging log
+    if (token) {
+        $('#loginSection').hide();
+        $('#signupSection').hide();
+        $('#dashboardSection').show();
+        $('#userEmail').text(localStorage.getItem('email'));
+        fetchUsers();
+    } else {
+        $('#loginSection').show();
+        $('#signupSection').hide();
+        $('#dashboardSection').hide();
+    }
+}
+
 
         // Logout
         $('#logoutBtn').click(() => {
@@ -163,26 +165,37 @@
         });
 
         // Fetch Users
-        function fetchUsers() {
-            const token = localStorage.getItem('token');
-            axios.get('https://crud-one-beryl.vercel.app/users', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                $('#usersTable').empty();
-                response.data.forEach(user => {
-                    $('#usersTable').append(`
-                        <tr data-name="${user.name}" data-email="${user.email}">
-                            <td>${user.name}</td>
-                            <td>${user.email}</td>
-                        </tr>
-                    `);
-                });
-            })
-            .catch(error => alert('Error occurred while fetching data: ' + error.response.data.message));
+        // Fetch Users (with Authorization Header)
+function fetchUsers() {
+    const token = localStorage.getItem('token');
+    console.log('Sending token:', token); // Debugging log
+    if (!token) {
+        console.log('No token found'); // Debugging log
+        return;
+    }
+    
+    axios.get('https://crud-one-beryl.vercel.app/users', {
+        headers: {
+            Authorization: `Bearer ${token}`
         }
+    })
+    .then(response => {
+        console.log('Fetched users:', response.data); // Debugging log
+        $('#usersTable').empty();
+        response.data.forEach(user => {
+            $('#usersTable').append(`
+                <tr data-name="${user.name}" data-email="${user.email}">
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                </tr>
+            `);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching users:', error);
+        alert('Error occurred while fetching data: ' + error.response.data.message);
+    });
+}
 
         // Trigger modal when a row in the table is clicked
         $('#usersTable').on('click', 'tr', function() {
